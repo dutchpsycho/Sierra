@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Framewrk">
+      <UniqueIdentifier>{18e8cb39-a361-4362-a1f5-3e34a04b1532}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Framewrk\defs.h">
+      <Filter>Framewrk</Filter>
+    </ClInclude>
+    <ClInclude Include="Framewrk\SK.h">
+      <Filter>Framewrk</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Framewrk\main.c">
+      <Filter>Framewrk</Filter>
+    </ClCompile>
+    <ClCompile Include="Framewrk\SK.c">
+      <Filter>Framewrk</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

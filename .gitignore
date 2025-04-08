@@ -1,0 +1,100 @@
+# Compiled Object files
+*.o
+*.a
+*.lib
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.app
+
+# Debug/Release folders
+/debug/
+SK/
+*/debug/
+*/release/
+*/bin/
+*/out/
+
+# VS Code directories
+.vscode/
+
+# VS directories and files
+.vs/
+.vs2019/
+.vs2017/
+.idea/
+
+# Rust build files
+target/
+
+# Cargo (Rust)
+**/target/
+**/Cargo.lock
+
+# Node modules (if you're using them in your project)
+node_modules/
+
+# IntelliJ IDEA
+.idea/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# JetBrains Rider
+.idea/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Build directories
+build/
+dist/
+
+# CMake files
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Makefile
+Makefile
+
+# Temporary files
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+*.lock
+
+# JetBrains specific
+.idea/
+
+# Mac specific
+.DS_Store
+Thumbs.db
+
+# Windows installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows installer cache
+$RECYCLE.BIN/
+
+# Backup files
+*~
+*.bak
+
+# Ignore everything in /out directory, but don't ignore the directory itself
+/out/*
