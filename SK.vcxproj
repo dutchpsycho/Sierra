@@ -23,7 +23,7 @@
     <ClInclude Include="Framewrk\SK.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Framewrk\main.c" />
+    <ClCompile Include="Framewrk\example.c" />
     <ClCompile Include="Framewrk\SK.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

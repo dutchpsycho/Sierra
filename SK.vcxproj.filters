@@ -4,21 +4,24 @@
     <Filter Include="Framewrk">
       <UniqueIdentifier>{18e8cb39-a361-4362-a1f5-3e34a04b1532}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Framewrk\C">
+      <UniqueIdentifier>{60f3b26e-cc3d-4616-b07c-f7f58c9f1d02}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framewrk\defs.h">
       <Filter>Framewrk</Filter>
     </ClInclude>
     <ClInclude Include="Framewrk\SK.h">
-      <Filter>Framewrk</Filter>
+      <Filter>Framewrk\C</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Framewrk\main.c">
+    <ClCompile Include="Framewrk\example.c">
       <Filter>Framewrk</Filter>
     </ClCompile>
     <ClCompile Include="Framewrk\SK.c">
-      <Filter>Framewrk</Filter>
+      <Filter>Framewrk\C</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

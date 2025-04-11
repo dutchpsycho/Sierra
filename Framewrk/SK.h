@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#pragma intrinsic(__readgsqword)
+
 #include "defs.h"
 
 #ifdef __cplusplus
@@ -31,6 +33,7 @@ typedef struct {
     void* OriginalFunc;
     void* TrampolineAddr;
     ULONGLONG LastUsedTick;
+    volatile LONG InUse;
 } SK_PROXY_SLOT;
 
 typedef struct {
