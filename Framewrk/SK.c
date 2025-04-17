@@ -27,7 +27,7 @@ __forceinline DWORD __fastcall SKHash(const char* str) {
 void SKStackScan(StackFrameHit* hits, int* count) {
     void** frame;
     __try {
-        frame = (void**)_AddressOfReturnAddress();
+        frame = (void**)_AddressOfReturnAddress(); // RtlCaptureStackBackTrace and I are not the same
 
         MEMORY_BASIC_INFORMATION mbi;
         int i = 0;
@@ -239,6 +239,8 @@ __forceinline void* SKProxyResolveHashed(DWORD hash, const void* func) {
     slot->OriginalFunc = (void*)func;
     slot->TrampolineAddr = slotAddr;
     slot->LastUsedTick = now;
+
+    _ReadWriteBarrier();
 
     MemoryBarrier();
     slot->InUse = 0;
