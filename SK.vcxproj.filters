@@ -9,9 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Framewrk\defs.h">
-      <Filter>Framewrk</Filter>
-    </ClInclude>
     <ClInclude Include="Framewrk\SK.h">
       <Filter>Framewrk\C</Filter>
     </ClInclude>

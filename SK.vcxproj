@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Framewrk\defs.h" />
     <ClInclude Include="Framewrk\SK.h" />
   </ItemGroup>
   <ItemGroup>
