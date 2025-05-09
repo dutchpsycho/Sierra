@@ -1,58 +1,86 @@
-# SK Framework Usage
+# SIERRA USAGE
 
-This is a quick usage guide to integrate SK into your redteam project or loader.
+## HOOKING EXAMPLE
 
----
+```c
+#include "sierra.h"
 
-## 🎯 Goal
-
-Use SK to safely resolve and call Windows API functions **without triggering EDR hooks**.
-
----
-
-## 🔧 Example: Resolving NtCreateThreadEx
-
-```cpp
-#include "SK.h"
-
-typedef NTSTATUS (NTAPI *NtCreateThreadEx_t)(HANDLE*, ACCESS_MASK, POBJECT_ATTRIBUTES, HANDLE, PVOID, PVOID, ULONG, SIZE_T, SIZE_T, SIZE_T, PVOID);
+ULONG MyHook(SIERRA_HOOK_CTX* ctx, ...) {
+    // logic to execute when the hook triggers
+    return 0x0;
+}
 
 int main() {
-    void* ntdll = SKGetModuleBase(L"ntdll.dll");
-    if (!ntdll) return -1;
-
-    void* proxy = SKGetProcedureAddrForCaller(ntdll, "NtCreateThreadEx", SK_FLAG_NONE);
-    if (!proxy) return -1;
-
-    NtCreateThreadEx_t NtCreateThreadEx = (NtCreateThreadEx_t)proxy;
-
-    // use NtCreateThreadEx(...) safely
-    return 0;
+    SRSetHook(L"ntdll.dll", "NtQueryInformationProcess", MyHook, SR_FLAG_NONE);
 }
+````
+
+---
+
+## CALLBACK CONTEXT
+
+```c
+typedef struct _SIERRA_HOOK_CTX {
+    void*       HookedFunc;
+    void*       CleanProxy;
+    const void* ModuleBase;
+} SIERRA_HOOK_CTX;
 ```
 
----
-
-## 🔐 Clean Proxy Behavior
-
-- Trampolines are allocated in executable memory
-- Original function prologue is copied safely (excluding hooks)
-- `SKIsLikelyHook` checks for jmp, call, push-ret shims
-- Function copying terminates on clean `ret` or known syscall stub
+* `HookedFunc` points to the original (possibly patched) target.
+* `CleanProxy` is a trampoline pointing to the clean version.
+* `ModuleBase` is the image base of the loaded module containing the function.
 
 ---
 
-## 🛑 Notes
+## MANUAL RESOLUTION
 
-- `SK_FLAG_ENABLE_SEH` can be set to trigger a debug exception on hook detection
-- `SKProxyLRU` should be called periodically to clean old trampolines
-- Export names are hashed using SKHash — no raw strings are used in memory
+If you need to resolve and call APIs manually — without importing `GetProcAddress` or `LoadLibrary` — SIERRA exposes internal resolution routines:
+
+```c
+void* SRGetModuleBase(const wchar_t* moduleName);
+void* SRGetProcedureAddrForCaller(const void* base, const char* funcName, DWORD flags);
+```
+
+### Example:
+
+```c
+void* ntdll = SRGetModuleBase(L"ntdll.dll");
+void* func  = SRGetProcedureAddrForCaller(ntdll, "NtClose", SR_FLAG_NONE);
+```
+
+`SRGetProcedureAddrForCaller` will step over forwarders, avoid `.edata`, verify `.text` bounds, and optionally return a clean trampoline proxy if the original is hooked.
 
 ---
 
-## 🧠 Gotchas
+## FLAGS
 
-- This framework doesn’t perform the syscall — it resolves the function cleanly.
-- Best paired with a syscall invoker like ActiveBreach.
+| Macro                         | Behavior                                 |
+| ----------------------------- | ---------------------------------------- |
+| SR\_FLAG\_NONE                | Default behavior                         |
+| SR\_FLAG\_ENABLE\_SEH         | Raises SEH exception if hook is detected |
+| SR\_FLAG\_DISABLE\_TRAMPOLINE | Skips proxy generation entirely          |
 
+---
 
+## RESTORING PATCHES
+
+To restore the original state of a hooked function:
+
+```c
+SRRestore(void* target, const BYTE* originalBytes, SIZE_T length);
+```
+
+Ensure `originalBytes` contains a valid copy of the original prologue. This is returned during `SRIntercept()` internally.
+
+---
+
+## PROXY SLOT CLEANUP
+
+Trampoline memory pages are reused. For long-running processes, clean up stale slots periodically:
+
+```c
+SRProxyLRU(__rdtsc() - N);
+```
+
+Where `N` is the number of clock ticks since last use. This removes trampolines older than that threshold.

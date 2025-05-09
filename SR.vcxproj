@@ -19,11 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Framewrk\SK.h" />
+    <ClCompile Include="Example\delay.c" />
+    <ClCompile Include="Example\hooks.c" />
+    <ClCompile Include="Example\memory.c" />
+    <ClCompile Include="Example\resolution.c" />
+    <ClCompile Include="Example\main.c" />
+    <ClCompile Include="Framework\sierra.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Framewrk\example.c" />
-    <ClCompile Include="Framewrk\SK.c" />
+    <ClInclude Include="Example\test.h" />
+    <ClInclude Include="Framework\sierra.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -31,6 +36,7 @@
     <ProjectGuid>{fc5812bb-3cca-42c2-b154-c122d7ce182a}</ProjectGuid>
     <RootNamespace>Flash</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Sierra</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

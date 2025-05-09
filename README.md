@@ -1,108 +1,94 @@
 ![TITAN](https://avatars.githubusercontent.com/u/199383721?s=200&v=4)
 
-# SK Framework
+# SIERRA Framework
 
-**SK** is an open-source fast lightweight function proxying framework designed to bypass usermode API hooks by scanning, validating, and replicating clean prologues of exported functions into dynamic trampoline slots. Developed by **TITAN Softwork Solutions**.
+**SIERRA** is a low-level C hooking, hook-evasion & IAT virtualization framework
 
-Unlike [ActiveBreach](https://github.com/dutchpsycho/ActiveBreach-Engine), SK does not perform syscalls directly. Instead, it focuses on ensuring clean and safe API usage inside hostile, hooked environments.
+Developed by **TITAN Softwork Solutions**
 
-It’s your first line of defense when executing APIs without tipping off userland monitoring tools.
+## Project Overview
+
+Generally the hooks removed.
+SIERRA doesn’t remove the hook — it sidesteps it, then hooks the proxy if you'd like.
+
+No system unhooking. No static syscall stubs. No signatured detourture.
+Just runtime trampoline redirection, memory-safe proxy slots, forwarder-aware resolution, and raw stack tracing — all done without disassemblers, wrappers, or dependency chains.
+
+## Why?
+
+> *"Popular hooking frameworks are extremely signatured, linking Detours gets flagged by every EDR in existance”*
+
+That was the thought behind SIERRA.
+
+Everyone uses Detours, MinHook, or some forked abstraction that bloats the IAT, sinks memory, touches loader internals, and leaves syscall-sized trails across memory. It works great — but it's loud.
+
+SIERRA is a smaller rewrite of the idea, not the tooling.
+
+* No reliance on CRT or WinAPI.
+* No disassembly libraries or VEH traps.
+* No `VirtualProtect` loops.
+* No static stubs AVs can regex.
+* No IAT noise. No loader friction.
+
+Not because Detours or any of these projects are bad — they're brilliant.
+But in low-noise, stealth-oriented environments, *overengineering is exposure*, and where security is crucial.
 
 ---
 
-## Features
+## API
 
-- Extremely fast
-- IAT virtualization: resolved APIs do not populate the import table (no `.idata` footprint)
-- Hook-Sidestepping: if a hook is detected, the function is trampoline-wrapped and cleaned, we don't touch the actual hook
-- Trampoline re-use, no memory clog, LRU system implemented
-- Stack-safe, trampoline-based execution
-- No reliance on `GetProcAddress` or import tables
-- Optional SEH flags for detecting hooks
-
----
-
-## Integration
-
-SK is a drop-in framework. Add `SK.c` and `SK.h` to your tooling stack or loader runtime. It allocates executable trampolines in memory and safely copies only valid, clean prologues from API functions.
-
-- x64 Windows (10/11)
-- C (compiled with MSVC / Visual Studio)
-- No dependencies
-
----
-
-## Usage Example
-
-This is a quick usage guide to integrate SK into your redteam project or loader.
-
-### Example: Resolving NtCreateThreadEx
+The following symbols are exposed by `sierra.h`:
 
 ```c
-#include "SK.h"
+// Function resolution (IAT Virtualization, IAT evasion)
+void* SRGetModuleBase(const wchar_t* moduleName);
+void* SRGetProcedureAddrForCaller(const void* base, const char* funcName, DWORD flags);
 
-typedef NTSTATUS (NTAPI *NtCreateThreadEx_t)(HANDLE*, ACCESS_MASK, POBJECT_ATTRIBUTES, HANDLE, PVOID, PVOID, ULONG, SIZE_T, SIZE_T, SIZE_T, PVOID);
+// Hook Installation
+BOOL SRSetHook(const wchar_t* moduleName, const char* funcName, SIERRA_CALLBACK callback, DWORD flags);
 
-int main() {
-    void* ntdll = SKGetModuleBase(L"ntdll.dll");
-    if (!ntdll) return -1;
-
-    void* proxy = SKGetProcedureAddrForCaller(ntdll, "NtCreateThreadEx", SK_FLAG_NONE);
-    if (!proxy) return -1;
-
-    NtCreateThreadEx_t NtCreateThreadEx = (NtCreateThreadEx_t)proxy;
-
-    // use NtCreateThreadEx(...) safely
-    return 0;
-}
+// Hook Context
+typedef struct _SIERRA_HOOK_CTX {
+    void*       HookedFunc;
+    void*       CleanProxy;
+    const void* ModuleBase;
+} SIERRA_HOOK_CTX;
 ```
 
 ---
 
-### Example: Resolving a Non-Exported Internal Stub (e.g. KiUserApcDispatcher)
+## USAGE
 
-```c
-#include "SK.h"
-
-#define KIUSERAPC_RVA 0x1234 // This is an EXAMPLE
-
-int main() {
-    void* ntdll = SKGetModuleBase(L"ntdll.dll");
-    if (!ntdll) return -1;
-
-    void* target = (BYTE*)ntdll + KIUSERAPC_RVA;
-
-    void* trampoline = SKProxyResolveHashed(SKHash("KiUserApcDispatcher"), target);
-    if (!trampoline) return -1;
-
-    // cast and call trampoline if needed
-    return 0;
-}
-```
-
-This method works for internal stubs that are not part of the export table, as long as the RVA is known and verified/resolved.
+See [`USAGE.md`](USAGE.md) for detailed examples.
 
 ---
 
-## Clean Proxy Behavior
+## HEADERS
 
-- Trampolines are allocated in executable memory
-- Original function prologue is copied safely (excluding hooks)
-- `SKIsLikelyHook` checks for jmp, call, push-ret shims
-- Function copying terminates on clean `ret` or known syscall stub
+All code is exported through `sierra.h`.  
+You must compile `sierra.c` into your project.
 
 ---
 
-## Notes
+## LICENSE
 
-- This is not a traditional DLL/lib you link to your project, you add `SK.c` to your project's codebase & compile it in
-- `SK_FLAG_ENABLE_SEH` can be set to trigger a debug exception on hook detection
-- `SKProxyLRU` should be called periodically to clean old trampolines
-- Export names are hashed using `SKHash` — no raw strings are used in memory
+This codebase is provided as-is under a modified MIT-style license.
+Use is restricted to red team simulation, research, and offensive defense.
 
 ---
+
+## ATTRIBUTION
+
+Built by TITAN Softwork Solutions.
+No external code used.
+No upstream inspiration.
+
+## License
+
+**Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**  
+
+[Full License](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Disclaimer
 
 This tool is for educational and research use only. Use at your own risk. You are solely responsible for how you use this code.
-

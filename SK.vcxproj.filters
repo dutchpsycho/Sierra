@@ -9,7 +9,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Framewrk\SK.h">
+    <ClInclude Include="Framewrk\SR.h">
       <Filter>Framewrk\C</Filter>
     </ClInclude>
   </ItemGroup>
@@ -17,7 +17,7 @@
     <ClCompile Include="Framewrk\example.c">
       <Filter>Framewrk</Filter>
     </ClCompile>
-    <ClCompile Include="Framewrk\SK.c">
+    <ClCompile Include="Framewrk\SR.c">
       <Filter>Framewrk\C</Filter>
     </ClCompile>
   </ItemGroup>

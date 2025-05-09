@@ -21,45 +21,44 @@ SK/
 # VS Code directories
 .vscode/
 
-# VS directories and files
+# Visual Studio
 .vs/
 .vs2019/
 .vs2017/
 .idea/
+*.vcxproj.filters
+*.vcxproj.user
+*.sln.docstates
 
-# Rust build files
+# Platform output
+x64/
+x86/
+
+# Project dirs
+SR/
+
+# Rust
 target/
-
-# Cargo (Rust)
 **/target/
 **/Cargo.lock
 
-# Node modules (if you're using them in your project)
+# Node
 node_modules/
 
-# IntelliJ IDEA
+# Rider / IntelliJ
 .idea/
 
-# Windows Installer files
-*.cab
-*.msi
-*.msm
-*.msp
-
-# JetBrains Rider
-.idea/
-
-# User-specific files
+# User files
 *.user
 *.userosscache
 *.suo
 *.userprefs
 
-# Build directories
+# Build dirs
 build/
 dist/
 
-# CMake files
+# CMake
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles/
@@ -68,7 +67,7 @@ cmake_install.cmake
 # Makefile
 Makefile
 
-# Temporary files
+# Temp
 *.swp
 *.swo
 *.bak
@@ -76,25 +75,15 @@ Makefile
 *.log
 *.lock
 
-# JetBrains specific
-.idea/
-
-# Mac specific
+# System
 .DS_Store
 Thumbs.db
-
-# Windows installer files
-*.cab
-*.msi
-*.msm
-*.msp
-
-# Windows installer cache
 $RECYCLE.BIN/
 
-# Backup files
+# Backups
 *~
 *.bak
 
-# Ignore everything in /out directory, but don't ignore the directory itself
+# /out but keep dir
 /out/*
+!.gitkeep
