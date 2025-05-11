@@ -70,13 +70,6 @@ You must compile `sierra.c` into your project.
 
 ---
 
-## LICENSE
-
-This codebase is provided as-is under a modified MIT-style license.
-Use is restricted to red team simulation, research, and offensive defense.
-
----
-
 ## ATTRIBUTION
 
 Built by TITAN Softwork Solutions.
