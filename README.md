@@ -57,20 +57,20 @@ typedef struct _SIERRA_HOOK_CTX {
 
 ---
 
-## USAGE
+## Usage
 
 See [`USAGE.md`](USAGE.md) for detailed examples.
 
 ---
 
-## HEADERS
+## Headers
 
 All code is exported through `sierra.h`.  
 You must compile `sierra.c` into your project.
 
 ---
 
-## ATTRIBUTION
+## Attributions
 
 Built by TITAN Softwork Solutions.
 No external code used.
