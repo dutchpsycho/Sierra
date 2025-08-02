@@ -1,4 +1,4 @@
-#include "test.h"
+#include "spec.h"
 
 typedef NTSTATUS(NTAPI* FnNtDelayExecution)(BOOLEAN, PLARGE_INTEGER);
 

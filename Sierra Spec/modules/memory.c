@@ -1,4 +1,4 @@
-#include "test.h"
+#include "spec.h"
 
 typedef NTSTATUS(NTAPI* FnNtReadVirtualMemory)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 typedef NTSTATUS(NTAPI* FnNtWriteVirtualMemory)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);

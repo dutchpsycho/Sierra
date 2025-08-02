@@ -1,4 +1,4 @@
-#include "test.h"
+#include "spec.h"
 
 typedef NTSTATUS(NTAPI* FnNtClose)(HANDLE);
 
@@ -9,7 +9,6 @@ ULONG MyNtCloseHook(SIERRA_HOOK_CTX* ctx, HANDLE h) {
 }
 
 void Run_HookTests() {
-    printf("\n[HOOK] installing NtClose hook\n");
     if (!SRSetHook(L"ntdll.dll", "NtClose", MyNtCloseHook, SR_FLAG_NONE)) {
         printf("[!] failed to hook NtClose\n");
         return;

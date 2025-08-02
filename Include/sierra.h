@@ -30,6 +30,7 @@
 #include <windows.h>
 #include <winnt.h>
 #include <intrin.h>
+#include <immintrin.h>
 #include <stddef.h>
 #include <string.h>
 

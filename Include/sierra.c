@@ -7,7 +7,7 @@
  *  Organization: TITAN Softwork Solutions
  *
  *  Description:
- *      SIERRA is a runtime control-flow redirection framework for x64 usermode.
+ *      SIERRA runtime control-flow redirection framework for x64 usermode.
  *      Built for environments with patched, forwarded, or inline-hooked APIs.
  *
  *  License:      Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
@@ -54,18 +54,27 @@ __forceinline DWORD __fastcall SRHash(const char* str) {
 
 void SRStackScan(StackFrameHit* hits, int* count) {
     void** frame;
-    __try {
-        frame = (void**)_AddressOfReturnAddress(); // RtlCaptureStackBackTrace and I are not the same
+    MEMORY_BASIC_INFORMATION mbi;
+    int i = 0;
 
-        MEMORY_BASIC_INFORMATION mbi;
-        int i = 0;
+    __try {
+        frame = (void**)_AddressOfReturnAddress();
 
         while (i < MAX_FRAMES && frame) {
-            if (!VirtualQuery(frame, &mbi, sizeof(mbi)) || mbi.State != MEM_COMMIT)
+            if (!VirtualQuery(frame, &mbi, sizeof(mbi)) ||
+                mbi.State != MEM_COMMIT ||
+                !(mbi.Protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)))
+                break;
+
+            if ((BYTE*)frame < (BYTE*)mbi.BaseAddress ||
+                (BYTE*)frame >= ((BYTE*)mbi.BaseAddress + mbi.RegionSize))
                 break;
 
             void* rip = *(frame + 1);
-            if (!rip) break;
+            if (!rip || !VirtualQuery(rip, &mbi, sizeof(mbi)) ||
+                mbi.State != MEM_COMMIT ||
+                !(mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE)))
+                break;
 
             if (i == 0 || hits[i - 1].Address != rip) {
                 hits[i].Address = rip;
@@ -222,11 +231,8 @@ __forceinline void* SRProxyResolveHashed(DWORD hash, const void* func) {
 
     for (int i = 0; i < SR_TOTAL_SLOTS; ++i) {
         SR_PROXY_SLOT* slot = &gProxyTable[i];
-        MemoryBarrier();
-
-        if (slot->Hash == hash && slot->OriginalFunc == func && slot->InUse == 0) {
+        if (slot->Hash == hash && slot->OriginalFunc == func) {
             slot->LastUsedTick = now;
-            MemoryBarrier();
             return slot->TrampolineAddr;
         }
     }
@@ -236,14 +242,20 @@ __forceinline void* SRProxyResolveHashed(DWORD hash, const void* func) {
     int offset = index % SR_PROXYS_PER_PAGE;
     SR_PROXY_SLOT* slot = &gProxyTable[index];
 
-    if (InterlockedExchange(&slot->InUse, 1) != 0)
-        return NULL;
+    int spin = 0;
+    for (int spin = 0; InterlockedCompareExchange(&slot->InUse, 1, 0) != 0; ++spin) {
+        _mm_pause();
+        if (spin > 64) {
+            Sleep(0);
+            spin = 0;
+        }
+    }
 
     void* page = gProxyPages[pageIndex];
     if (!page) {
         void* newPage = VirtualAlloc(NULL, SR_PROXY_PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
         if (!newPage) {
-            slot->InUse = 0;
+            InterlockedExchange(&slot->InUse, 0);
             return NULL;
         }
 
@@ -254,12 +266,9 @@ __forceinline void* SRProxyResolveHashed(DWORD hash, const void* func) {
         else {
             page = newPage;
         }
-
-        MemoryBarrier();
     }
 
     void* slotAddr = (BYTE*)page + offset * SR_PROXY_SLOT_SIZE;
-
     SRSafeCopyProxy(slotAddr, func, SR_PROXY_SLOT_SIZE);
 
     slot->Hash = hash;
@@ -267,10 +276,7 @@ __forceinline void* SRProxyResolveHashed(DWORD hash, const void* func) {
     slot->TrampolineAddr = slotAddr;
     slot->LastUsedTick = now;
 
-    _ReadWriteBarrier();
-
-    MemoryBarrier();
-    slot->InUse = 0;
+    InterlockedExchange(&slot->InUse, 0);
 
     return slotAddr;
 }
@@ -378,15 +384,29 @@ __forceinline BOOL SRIsFunc(const void* func, const void* base) {
     return FALSE;
 }
 
-void* SRGetModuleBase(const wchar_t* name) {
-    const PEB* peb = (PEB*)__readgsqword(0x60);
+__forceinline void* SRGetModuleBase(const wchar_t* name) {
+    static struct { const wchar_t* modName; void* base; } cMod[16] = { 0 };
 
+    for (int i = 0; i < 16; ++i) {
+        if (cMod[i].modName && !_wcsicmp(cMod[i].modName, name))
+            return cMod[i].base;
+    }
+
+    const PEB* peb = (PEB*)__readgsqword(0x60);
     const LIST_ENTRY* list = &peb->Ldr->InMemoryOrderModuleList;
 
     for (const LIST_ENTRY* curr = list->Flink; curr != list; curr = curr->Flink) {
         const LDR_DATA_TABLE_ENTRY* entry = (const LDR_DATA_TABLE_ENTRY*)((const BYTE*)curr - offsetof(LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks));
-        if (!_wcsicmp(entry->BaseDllName.Buffer, name))
+        if (!_wcsicmp(entry->BaseDllName.Buffer, name)) {
+            for (int j = 0; j < 16; ++j) {
+                if (!cMod[j].modName) {
+                    cMod[j].modName = entry->BaseDllName.Buffer;
+                    cMod[j].base = entry->DllBase;
+                    break;
+                }
+            }
             return entry->DllBase;
+        }
     }
 
     return NULL;
@@ -653,24 +673,26 @@ BOOL SRSetHook(const wchar_t* moduleName, const char* funcName, SIERRA_CALLBACK 
         return FALSE;
 
     for (int i = 0; i < SIERRA_MAX_HOOKS; ++i) {
-        SIERRA_HOOK* h = &gHookTable[i];
-        if (h->TargetFunc == NULL) {
+        void* expected = NULL;
+        if (_InterlockedCompareExchangePointer(&gHookTable[i].TargetFunc, (void*)0x1, NULL) == NULL) {
             BYTE original[TRAMPOLINE_SIZE];
             SIZE_T len = 0;
-
-            if (!SRIntercept(target, SRTrampolineDispatcherBridge, original, &len))
+            if (!SRIntercept(target, SRTrampolineDispatcherBridge, original, &len)) {
+                gHookTable[i].TargetFunc = NULL;
                 return FALSE;
+            }
 
-            h->Hash = hash;
-            h->TargetFunc = target;
-            h->Trampoline = NULL;
-            memcpy(h->Original, original, len);
-            h->PatchLen = len;
-            h->Callback = callback;
-            h->Flags = flags;
-            h->ModuleBase = mod;
+            gHookTable[i].Hash = hash;
+            gHookTable[i].TargetFunc = target;
+            memcpy(gHookTable[i].Original, original, len);
+            gHookTable[i].PatchLen = len;
+            gHookTable[i].Callback = callback;
+            gHookTable[i].Flags = flags;
+            gHookTable[i].ModuleBase = mod;
+
             return TRUE;
         }
     }
+
     return FALSE;
 }

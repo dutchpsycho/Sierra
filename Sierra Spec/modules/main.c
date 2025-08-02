@@ -1,9 +1,9 @@
-#include "test.h"
+#include "spec.h"
 
 typedef void(WINAPI* FnRtlExitUserThread)(NTSTATUS);
 
 int main() {
-    printf("[*] SIERRA Testing Suite Initialized [*]\n");
+    printf("[[ SIERRA Testing Suite Initialized ]]\n\n");
 
     Run_HookTests();
     Run_ResolutionTests();
@@ -14,7 +14,7 @@ int main() {
         SRGetModuleBase(L"ntdll.dll"), "RtlExitUserThread", SR_FLAG_ENABLE_SEH
     );
 
-    printf("\n[~] SIERRA Testing Suite | All tests passed [~]\n");
+    printf("\n[[ SIERRA Testing Suite - All tests passed ]]\n");
     if (exitThread) exitThread(0x77777777);
     return 0;
 }

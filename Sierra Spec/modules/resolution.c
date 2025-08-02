@@ -1,4 +1,4 @@
-#include "test.h"
+#include "spec.h"
 
 typedef NTSTATUS(NTAPI* FnNtQueryInformationProcess)(HANDLE, ULONG, PVOID, ULONG, PULONG);
 typedef NTSTATUS(NTAPI* FnLdrGetProcedureAddress)(void*, struct _ANSI_STRING*, ULONG, void**);
